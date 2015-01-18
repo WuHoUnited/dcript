@@ -31,10 +31,12 @@
                             \y 0.01974
                             \z 0.00074})
 
-(defn table-view [{:keys [columns data]} owner]
+(defn table-view [{:keys [caption columns data]} owner]
   (reify om/IRender
     (render [_]
             (dom/table #js {:className "frequencies"}
+                       (dom/caption #js {}
+                                    caption)
                        (dom/thead #js {}
                                   (apply dom/tr #js {}
                                          (om/build-all (fn [column]
@@ -50,18 +52,21 @@
                                                                                  datum))))
                                             data))))))
 
-(defn frequency-view [frequencies owner]
+(defn frequency-view [{:keys [frequencies caption]} owner]
   (let [freqs (->> frequencies
                    (map (fn [[letter number]]
                           [letter (.toFixed (* 100 number) 3)]))
                    (sort-by (fn [[letter number]]
                               [(- number) letter])))]
-    (table-view {:columns ["Letter" "Frequency"]
+    (table-view {:caption caption
+                 :columns ["Letter" "Frequency"]
                  :data freqs})))
 
 (defn string-frequency-view [{:keys [string]} owner]
-  (frequency-view (dcript/calculate-frequencies string)
+  (frequency-view {:caption "Cipher Frequencies"
+                   :frequencies (dcript/calculate-frequencies string)}
                   owner))
 
 (defn english-frequency-view [_ owner]
-  (frequency-view *english-frequencies* owner))
+  (frequency-view {:caption "English Frequencies"
+                   :frequencies *english-frequencies*} owner))

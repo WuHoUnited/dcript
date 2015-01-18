@@ -36,6 +36,10 @@ div.plaintext{
   vertical-align: top;
 }
 
+input{
+  width: 1.5em;
+}
+
 input.mapping-input{
   width: 2em;
 }
