@@ -1,0 +1,62 @@
+ul.cipher-mapping > li > div{
+  display: inline;
+}
+
+ul.cipher-mapping > li > div:first-child::after{
+  content: ': ';
+}
+
+table.frequencies{
+  display: inline-block;
+  vertical-align: top;
+  margin: 0 2em 0 2em;
+}
+
+table.frequencies > tbody > tr > td:first-child{
+
+}
+
+textarea{
+  width: 300;
+  height: 100;
+  vertical-align: top;
+}
+
+ul.cipher-mapping{
+  display: inline-block;
+  padding-left: 1em;
+}
+
+ul.cipher-mapping > li{
+  list-style: none;
+}
+
+div.plaintext{
+  display: inline-block;
+  vertical-align: top;
+}
+
+input.mapping-input{
+  width: 2em;
+}
+
+body{
+  font-family: monospace;
+}
+
+.standard-letter{
+  display: inline-block;
+}
+
+.standard-ciphertext{
+  display: block;
+}
+
+.standard-plaintext{
+  display: block;
+}
+
+.standard-word{
+  display: inline-block;
+  margin: 0.5em;
+}
