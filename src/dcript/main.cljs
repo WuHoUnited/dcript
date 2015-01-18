@@ -57,9 +57,9 @@
             (om/build ciphertext-view app-state)
             (om/build plaintext-view app-state)
             (om/build mapping/mapping-view app-state)
-            (om/build freq/english-frequency-view nil)
             (om/build freq/string-frequency-view app-state {:fn (fn [{:keys [ciphertext]}]
-                                                                  {:string ciphertext})}))))
+                                                                    {:string ciphertext})})
+            (om/build freq/english-frequency-view nil))))
 
 (defn ^:export main []
   (om/root

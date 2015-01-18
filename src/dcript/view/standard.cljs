@@ -13,7 +13,7 @@
    :else default))
 
 (defn handle-keypress [e update-structure cipher plain]
-  (let [val (convert-key-code (.-keyCode e) plain)]
+  (let [val (convert-key-code (.-charCode e) plain)]
     (om/update! update-structure
                 [cipher]
                 val)))

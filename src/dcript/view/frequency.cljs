@@ -31,23 +31,23 @@
                             \y 0.01974
                             \z 0.00074})
 
-(defn table-view [{:keys [columns data]}]
+(defn table-view [{:keys [columns data]} owner]
   (reify om/IRender
     (render [_]
             (dom/table #js {:className "frequencies"}
                        (dom/thead #js {}
                                   (apply dom/tr #js {}
                                          (om/build-all (fn [column]
-                                                         (dom/td #js {}
-                                                                 column))
+                                                         (om/component (dom/td #js {}
+                                                                               column)))
                                                        columns)))
                        (apply dom/tbody #js {}
                               (om/build-all (fn [datum]
-                                              (apply dom/tr #js {}
-                                                     (om/build-all (fn [cell]
-                                                                     (dom/td #js {}
-                                                                             cell))
-                                                                   datum)))
+                                              (om/component (apply dom/tr #js {}
+                                                                   (om/build-all (fn [cell]
+                                                                                   (om/component (dom/td #js {}
+                                                                                                         cell)))
+                                                                                 datum))))
                                             data))))))
 
 (defn frequency-view [frequencies owner]
