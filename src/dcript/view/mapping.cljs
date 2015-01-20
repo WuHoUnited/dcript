@@ -3,27 +3,20 @@
             [om.dom :as dom]
 
             [dcript.core :as dcript]
-            [clojure.string :as string]))
 
-(defn convert-key-code [code default]
-  ;; This doesn't work in firefox because it uses charCode instead of keyCode
-  (cond
-   (dcript/letter? (.fromCharCode js/String code)) (string/lower-case (.fromCharCode js/String code))
-   :else default))
+            [clojure.string :as string]
 
-(defn handle-keypress [e update-structure cipher plain]
-  (let [val (convert-key-code (.-charCode e) plain)]
-    (om/update! update-structure
-                [cipher]
-                val)))
+            [cljs.core.async :as a]))
 
-(defn handle-keydown [e update-structure cipher]
+(defn handle-keypress [e chan cipher]
+  (let [val (.fromCharCode js/String (.-charCode e))]
+    (a/put! chan [:guess-letter cipher val])))
+
+(defn handle-keydown [e chan cipher]
   (when (#{8 46} (.-keyCode e))
-    (om/update! update-structure
-                [cipher]
-                nil)))
+    (a/put! chan [:guess-letter cipher nil])))
 
-(defn single-mapping-view [{:keys [plain cipher update-structure] :as mapping} owner]
+(defn single-mapping-view [{:keys [plain cipher update-structure chan] :as mapping} owner]
   (reify om/IRender
     (render [_]
             (dom/li #js {}
@@ -32,10 +25,10 @@
                     (dom/input #js {:maxLength 1
                                     :className "mapping-input"
                                     :value plain
-                                    :onKeyPress #(handle-keypress % update-structure cipher plain)
-                                    :onKeyDown #(handle-keydown % update-structure cipher)})))))
+                                    :onKeyPress #(handle-keypress % chan cipher)
+                                    :onKeyDown #(handle-keydown % chan cipher)})))))
 
-(defn mapping-view [{:keys [guessed-mapping]} owner]
+(defn mapping-view [{:keys [guessed-mapping chan]} owner]
   (reify om/IRender
     (render [_]
             (apply dom/ul #js {:className "cipher-mapping"}
@@ -44,4 +37,5 @@
                                  {:fn (fn [letter]
                                         {:cipher letter
                                          :plain (guessed-mapping letter)
-                                         :update-structure guessed-mapping})})))))
+                                         :update-structure guessed-mapping
+                                         :chan chan})})))))
