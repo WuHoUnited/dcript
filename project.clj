@@ -19,8 +19,7 @@
                         :compiler {
                                    :output-to "public/prod/dcript.js"
                                    :optimizations :advanced
-                                   :preamble ["react/react.min.js"]
-                                   :externs ["react/externs/react.js"]}}
+                                   :preamble ["react/react.min.js"]}}
                        {:id "dev"
                         :source-paths ["src"]
                         :compiler {

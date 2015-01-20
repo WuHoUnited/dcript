@@ -1,3 +1,7 @@
+body{
+  font-family: monospace;
+}
+
 ul.cipher-mapping > li > div{
   display: inline;
 }
@@ -38,14 +42,11 @@ div.plaintext{
 
 input{
   width: 1.5em;
+  text-align: center;
 }
 
 input.mapping-input{
   width: 2em;
-}
-
-body{
-  font-family: monospace;
 }
 
 .standard-letter{
@@ -54,6 +55,7 @@ body{
 
 .standard-ciphertext{
   display: block;
+  text-align: center;
 }
 
 .standard-plaintext{

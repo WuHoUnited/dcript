@@ -60,7 +60,8 @@
                               [(- number) letter])))]
     (table-view {:caption caption
                  :columns ["Letter" "Frequency"]
-                 :data freqs})))
+                 :data freqs}
+                owner)))
 
 (defn string-frequency-view [{:keys [string]} owner]
   (frequency-view {:caption "Cipher Frequencies"
