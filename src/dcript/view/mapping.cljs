@@ -16,19 +16,20 @@
   (when (#{8 46} (.-keyCode e))
     (a/put! chan [:guess-letter cipher nil])))
 
-(defn single-mapping-view [{:keys [plain cipher update-structure chan] :as mapping} owner]
-  (reify om/IRender
-    (render [_]
-            (dom/li #js {}
-                    (dom/div #js {}
-                             cipher)
-                    (dom/input #js {:maxLength 1
-                                    :className "mapping-input"
-                                    :value plain
-                                    :onKeyPress #(handle-keypress % chan cipher)
-                                    :onKeyDown #(handle-keydown % chan cipher)})))))
+(defn single-mapping-view [{:keys [plain cipher update-structure] :as mapping} owner]
+  (let [chan (-> owner om/get-shared :chan)]
+    (reify om/IRender
+      (render [_]
+              (dom/li #js {}
+                      (dom/div #js {}
+                               cipher)
+                      (dom/input #js {:maxLength 1
+                                      :className "mapping-input"
+                                      :value plain
+                                      :onKeyPress #(handle-keypress % chan cipher)
+                                      :onKeyDown #(handle-keydown % chan cipher)}))))))
 
-(defn mapping-view [{:keys [guessed-mapping chan]} owner]
+(defn mapping-view [{:keys [guessed-mapping]} owner]
   (reify om/IRender
     (render [_]
             (apply dom/ul #js {:className "cipher-mapping"}
@@ -37,5 +38,4 @@
                                  {:fn (fn [letter]
                                         {:cipher letter
                                          :plain (guessed-mapping letter)
-                                         :update-structure guessed-mapping
-                                         :chan chan})})))))
+                                         :update-structure guessed-mapping})})))))

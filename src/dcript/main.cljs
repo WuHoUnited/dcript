@@ -15,23 +15,6 @@
 
 (enable-console-print!)
 
-(def app-state (atom {:plaintext "Hello World"
-                      :ciphertext "Abccd Edfcg"
-                      :guessed-mapping {}
-                      :chan (a/chan)}))
-
-
-@app-state
-
-;;;;;;;;;;
-
-(declare handle-message)
-
-(let [chan (:chan @app-state)]
-  (go-loop [v (a/<! chan)]
-           (swap! app-state handle-message v)
-           (recur (a/<! chan))))
-
 (defmulti handle-message (fn [state [msg & args]] msg))
 
 (defmethod handle-message :guess-letter [state [_ cipher plain]]
@@ -42,6 +25,9 @@
               [:guessed-mapping cipher]
               lower-plain)))
 
+(defmethod handle-message :update-ciphertext [state [_ ciphertext]]
+  (assoc-in state [:ciphertext] ciphertext))
+
 ;;;;;;;;;;
 
 
@@ -49,11 +35,11 @@
 ;; There is a lot of converting to lower-case and checking for nils and things
 ;; like that that is currently part of the views themselves.
 
-
 (defn ciphertext-view [{:keys [ciphertext] :as app-state} owner]
-  (let [change (fn [e]
+  (let [chan (-> owner om/get-shared :chan)
+        change (fn [e]
                  (let [val (.. e -target -value)]
-                   (om/update! app-state [:ciphertext] val)))]
+                   (a/put! chan [:update-ciphertext val])))]
     (reify
       om/IRender
       (render [_]
@@ -88,7 +74,22 @@
             (om/build freq/english-frequency-view nil))))
 
 (defn ^:export main []
-  (om/root
-   app-view
-   app-state
-   {:target (. js/document (getElementById "app"))}))
+  (let [app-state (atom {:plaintext "Hello World"
+                         :ciphertext "Abccd Edfcg"
+                         :guessed-mapping {}})
+        chan (a/chan)
+        ref-cursor (om/ref-cursor (om/root-cursor app-state))]
+
+    (go-loop []
+             (let [v (a/<! chan)]
+               (om/transact! ref-cursor
+                             []
+                             (fn [state]
+                               (handle-message state v)))
+               (recur)))
+
+    (om/root
+     app-view
+     app-state
+     {:shared {:chan chan}
+      :target (. js/document (getElementById "app"))})))

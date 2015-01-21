@@ -16,32 +16,32 @@
   (when (#{8 46} (.-keyCode e))
     (a/put! chan [:guess-letter cipher nil])))
 
-(defn letter-view [{:keys [cipher guessed-mapping chan]} owner]
-  (reify
-    om/IRender
-    (render [_]
-            (let [plain (guessed-mapping cipher)]
-              (dom/div #js {:className "standard-letter"}
-                       (dom/input #js {:className "standard-plaintext"
-                                       :type "text"
-                                       :size 1
-                                       :value (guessed-mapping cipher)
-                                       :onKeyPress #(handle-keypress % chan cipher)
-                                       :onKeyDown #(handle-keydown % chan cipher)})
-                       (dom/div #js {:className "standard-ciphertext"}
-                                cipher))))))
+(defn letter-view [{:keys [cipher guessed-mapping]} owner]
+  (let [chan (-> owner om/get-shared :chan)]
+    (reify
+      om/IRender
+      (render [_]
+              (let [plain (guessed-mapping cipher)]
+                (dom/div #js {:className "standard-letter"}
+                         (dom/input #js {:className "standard-plaintext"
+                                         :type "text"
+                                         :size 1
+                                         :value (guessed-mapping cipher)
+                                         :onKeyPress #(handle-keypress % chan cipher)
+                                         :onKeyDown #(handle-keydown % chan cipher)})
+                         (dom/div #js {:className "standard-ciphertext"}
+                                  cipher)))))))
 
-(defn word-view [{:keys [word guessed-mapping chan] :as arg} owner]
+(defn word-view [{:keys [word guessed-mapping] :as arg} owner]
   (reify
     om/IRender
     (render [_]
             (apply dom/div #js {:className "standard-word"}
                    (om/build-all letter-view (seq word) {:fn (fn [cipher]
                                                                {:cipher cipher
-                                                                :guessed-mapping guessed-mapping
-                                                                :chan chan})})))))
+                                                                :guessed-mapping guessed-mapping})})))))
 
-(defn standard-view [{:keys [ciphertext guessed-mapping chan]} owner]
+(defn standard-view [{:keys [ciphertext guessed-mapping]} owner]
   (reify
     om/IRender
     (render [_]
@@ -50,5 +50,4 @@
                                  (re-seq #"\S+" (string/lower-case ciphertext))
                                  {:fn (fn [word]
                                         {:word word
-                                         :guessed-mapping guessed-mapping
-                                         :chan chan})})))))
+                                         :guessed-mapping guessed-mapping})})))))
