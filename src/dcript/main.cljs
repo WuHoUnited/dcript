@@ -10,6 +10,9 @@
             [dcript.view.mapping :as mapping]
             [dcript.view.standard-simple :as standard-simple]
             [dcript.view.standard :as standard]
+            [dcript.view.ciphertext :as ciphertext-view]
+            [dcript.view.plaintext :as plaintext-view]
+
             [dcript.core :as dcript])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -18,74 +21,42 @@
 (defmulti handle-message (fn [state [msg & args]] msg))
 
 (defmethod handle-message :guess-letter [state [_ cipher plain]]
-  ;; The logic for this should be in the core, since it has to do other
-  ;; things like make sure that it's a letter.
-  (let [lower-plain (if plain (string/lower-case plain))]
-    (assoc-in state
-              [:guessed-mapping cipher]
-              lower-plain)))
+  (update-in state
+             [:guessed-mapping]
+             dcript/associate-letter
+             cipher
+             plain))
 
 (defmethod handle-message :update-ciphertext [state [_ ciphertext]]
-  (assoc-in state [:ciphertext] ciphertext))
+  (assoc-in state [:ciphertext] (dcript/convert-string ciphertext)))
 
-;;;;;;;;;;
-
-
-;; I would like to combine the methods that operate on the app-state together.
-;; There is a lot of converting to lower-case and checking for nils and things
-;; like that that is currently part of the views themselves.
-
-(defn ciphertext-view [{:keys [ciphertext] :as app-state} owner]
-  (let [chan (-> owner om/get-shared :chan)
-        change (fn [e]
-                 (let [val (.. e -target -value)]
-                   (a/put! chan [:update-ciphertext val])))]
-    (reify
-      om/IRender
-      (render [_]
-              (dom/textarea #js {:onChange change
-                                 :value ciphertext})))))
-
-(defn decode [ciphertext mapping default-character]
-  (->> ciphertext
-       (map string/lower-case)
-       (map (fn [character]
-              (if (dcript/letter? character)
-                (let [char (get mapping character)]
-                  (or char default-character))
-                character)))
-       (apply str)))
-
-(defn plaintext-view [{:keys [ciphertext guessed-mapping]} owner]
-  (om/component
-   (dom/div #js {:className "plaintext"}
-            (decode ciphertext guessed-mapping \-))))
+(defmethod handle-message :activate-cipher-letter [state [_ letter]]
+  (assoc-in state [:active-cipher-letter] letter))
 
 (defn app-view [app-state owner]
   (om/component
    (dom/div #js {}
             (om/build standard-simple/standard-simple-view app-state)
             (om/build standard/standard-view app-state)
-            (om/build ciphertext-view app-state)
-            (om/build plaintext-view app-state)
+            (om/build ciphertext-view/ciphertext-view app-state)
+            (om/build plaintext-view/plaintext-view app-state)
             (om/build mapping/mapping-view app-state)
-            (om/build freq/string-frequency-view app-state {:fn (fn [{:keys [ciphertext]}]
-                                                                  {:string ciphertext})})
+            ;; string-frequency-view comes up with the wrong answer because of case sensitivity
+            (om/build freq/string-frequency-view app-state {:fn (fn [{:keys [ciphertext active-cipher-letter]}]
+                                                                  {:string ciphertext
+                                                                   :active-letter active-cipher-letter})})
             (om/build freq/english-frequency-view nil))))
 
 (defn ^:export main []
-  (let [app-state (atom {:plaintext "Hello World"
-                         :ciphertext "Abccd Edfcg"
-                         :guessed-mapping {}})
+  (let [app-state (atom {:ciphertext "abccd edfcg"
+                         :guessed-mapping {}
+                         :active-cipher-letter nil})
         chan (a/chan)
         ref-cursor (om/ref-cursor (om/root-cursor app-state))]
 
     (go-loop []
              (let [v (a/<! chan)]
-               (om/transact! ref-cursor
-                             []
-                             (fn [state]
-                               (handle-message state v)))
+               (om/transact! ref-cursor #(handle-message % v))
                (recur)))
 
     (om/root

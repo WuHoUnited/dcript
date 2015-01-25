@@ -66,3 +66,7 @@ input.mapping-input{
   display: inline-block;
   margin: 0.5em;
 }
+
+.active{
+  background-color: #00ffff;
+}

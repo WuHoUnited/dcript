@@ -4,27 +4,34 @@
 (def ENGLISH_LETTERS
   (apply sorted-set "abcdefghijklmnopqrstuvwxyz"))
 
-(defn letter? [char]
-  (ENGLISH_LETTERS (string/lower-case char)))
+(defn letter? [character]
+  (and character
+       (ENGLISH_LETTERS (string/lower-case character))))
 
-(defn filter-letters [text valid-letters]
-  (filter valid-letters text))
+(defn convert-letter [letter]
+  (if (letter? letter)
+    (string/lower-case letter)
+    letter))
 
-(defn safe-division [dividend divisor default]
-  (if (zero? divisor)
-    default
-    (/ dividend divisor)))
+(defn convert-string [string]
+  (->> string
+       (map convert-letter)
+       (apply str)))
 
-(defn calculate-frequencies [text]
-  (let [filtered-text (filter-letters text ENGLISH_LETTERS)
-        blank-map (zipmap ENGLISH_LETTERS (repeat 0))
-        counts (reduce
-                (fn [map-count letter]
-                  (update-in map-count (string/lower-case letter) inc))
-                blank-map
-                filtered-text)
-        total (count filtered-text)]
-    (reduce-kv (fn [m k v]
-                 (assoc m k (safe-division v total 0)))
-               blank-map
-               counts)))
+(defn associate-letter [mapping cipher plain]
+  (let [converted-cipher (convert-letter cipher)
+        converted-plain (convert-letter plain)
+        cipher-is-letter (letter? converted-cipher)
+        plain-is-letter (letter? converted-plain)]
+    (cond (and cipher-is-letter plain-is-letter) (assoc mapping converted-cipher converted-plain)
+          cipher-is-letter (dissoc mapping converted-cipher))))
+
+(defn decode-letter [mapping character default]
+  (if (letter? character)
+    (get mapping character default)
+    character))
+
+(defn decode [ciphertext mapping default]
+  (->> ciphertext
+       (map #(decode-letter mapping % default))
+       (apply str)))

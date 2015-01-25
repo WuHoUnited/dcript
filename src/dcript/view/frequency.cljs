@@ -2,7 +2,7 @@
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
 
-            [dcript.core :as dcript]))
+            [dcript.analysis.frequency :as freq-anal]))
 
 (def *english-frequencies* {\a 0.08167
                             \b 0.01492
@@ -31,7 +31,7 @@
                             \y 0.01974
                             \z 0.00074})
 
-(defn table-view [{:keys [caption columns data]} owner]
+(defn table-view [{:keys [caption columns data active-letter]} owner]
   (reify om/IRender
     (render [_]
             (dom/table #js {:className "frequencies"}
@@ -44,15 +44,16 @@
                                                                                column)))
                                                        columns)))
                        (apply dom/tbody #js {}
-                              (om/build-all (fn [datum]
-                                              (om/component (apply dom/tr #js {}
+                              (om/build-all (fn [[d & _ :as datum]]
+                                              (om/component (apply dom/tr #js {:className (if (= active-letter d)
+                                                                                            "active")}
                                                                    (om/build-all (fn [cell]
                                                                                    (om/component (dom/td #js {}
                                                                                                          cell)))
                                                                                  datum))))
                                             data))))))
 
-(defn frequency-view [{:keys [frequencies caption]} owner]
+(defn frequency-view [{:keys [frequencies caption active-letter]} owner]
   (let [freqs (->> frequencies
                    (map (fn [[letter number]]
                           [letter (.toFixed (* 100 number) 3)]))
@@ -60,12 +61,14 @@
                               [(- number) letter])))]
     (table-view {:caption caption
                  :columns ["Letter" "Frequency"]
-                 :data freqs}
+                 :data freqs
+                 :active-letter active-letter}
                 owner)))
 
-(defn string-frequency-view [{:keys [string]} owner]
+(defn string-frequency-view [{:keys [string active-letter]} owner]
   (frequency-view {:caption "Cipher Frequencies"
-                   :frequencies (dcript/calculate-frequencies string)}
+                   :frequencies (freq-anal/calculate-frequencies string)
+                   :active-letter active-letter}
                   owner))
 
 (defn english-frequency-view [_ owner]
