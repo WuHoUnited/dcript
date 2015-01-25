@@ -13,11 +13,11 @@
 
   :clean-targets ["out/dcript" "public/dev/dcript.js" "public/prod/dcript.js"]
 
-  :cljsbuild {
-              :builds [{:id "prod"
+  :cljsbuild {:builds [{:id "prod"
                         :source-paths ["src"]
                         :compiler {
                                    :output-to "public/prod/dcript.js"
+                                   :output-dir "out-prod"
                                    :optimizations :advanced
                                    :preamble ["react/react.min.js"]}}
                        {:id "dev"

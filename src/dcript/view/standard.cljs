@@ -40,7 +40,8 @@
                                            :onKeyDown #(handle-keydown % chan cipher)
                                            :onFocus #(handle-focus chan cipher)
                                            :onBlur #(handle-blur chan)})
-                           cipher)
+                           (dom/span #js {:className "standard-plaintext"}
+                                     cipher))
                          (dom/div #js {:className "standard-ciphertext"}
                                   cipher)))))))
 
