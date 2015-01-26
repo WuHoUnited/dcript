@@ -8,13 +8,9 @@
 
             [cljs.core.async :as a]))
 
-(defn handle-keypress [e chan cipher]
-  (let [val (.fromCharCode js/String (.-charCode e))]
+(defn handle-change [e chan cipher]
+  (let [val (.. e -target -value)]
     (a/put! chan [:guess-letter cipher val])))
-
-(defn handle-keydown [e chan cipher]
-  (when (#{8 46} (.-keyCode e))
-    (a/put! chan [:guess-letter cipher nil])))
 
 (defn single-mapping-view [{:keys [plain cipher update-structure] :as mapping} owner]
   (let [chan (-> owner om/get-shared :chan)]
@@ -26,8 +22,7 @@
                       (dom/input #js {:maxLength 1
                                       :className "mapping-input"
                                       :value plain
-                                      :onKeyPress #(handle-keypress % chan cipher)
-                                      :onKeyDown #(handle-keydown % chan cipher)}))))))
+                                      :onChange #(handle-change % chan cipher)}))))))
 
 (defn mapping-view [{:keys [guessed-mapping]} owner]
   (reify om/IRender

@@ -6,13 +6,9 @@
 
             [cljs.core.async :as a]))
 
-(defn handle-keypress [e chan cipher]
-  (let [val (.fromCharCode js/String (.-charCode e))]
+(defn handle-change [e chan cipher]
+  (let [val (.. e -target -value)]
     (a/put! chan [:guess-letter cipher val])))
-
-(defn handle-keydown [e chan cipher]
-  (when (#{8 46} (.-keyCode e))
-    (a/put! chan [:guess-letter cipher nil])))
 
 (defn handle-focus [chan cipher]
   (a/put! chan [:activate-cipher-letter cipher]))
@@ -36,8 +32,7 @@
                                            :type "text"
                                            :size 1
                                            :value (guessed-mapping cipher)
-                                           :onKeyPress #(handle-keypress % chan cipher)
-                                           :onKeyDown #(handle-keydown % chan cipher)
+                                           :onChange #(handle-change % chan cipher)
                                            :onFocus #(handle-focus chan cipher)
                                            :onBlur #(handle-blur chan)})
                            (dom/span #js {:className "standard-plaintext"}
